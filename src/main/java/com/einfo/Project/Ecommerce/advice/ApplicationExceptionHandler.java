@@ -22,7 +22,7 @@ public class ApplicationExceptionHandler {
     	});
     	return erromap;
     }
-	@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR) 
+	@ResponseStatus(HttpStatus.FOUND) 
     @ExceptionHandler(UserAlaradyExiest.class)
 	public Map<String ,String>handelInvalidArugument(UserAlaradyExiest ex){
     	Map<String,String>erroMap=new HashMap<>();
