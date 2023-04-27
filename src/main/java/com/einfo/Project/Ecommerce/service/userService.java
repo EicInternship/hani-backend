@@ -2,6 +2,7 @@ package com.einfo.Project.Ecommerce.service;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -25,7 +26,7 @@ public class userService {
 	ProductrRepo productrepo;
 
 	public User saveuser(UserRequest userRequest) throws UserAlaradyExiest {
-		List<User> li = repo.findByEmail(userRequest.getEmail());
+	    Optional<User> li = repo.findByEmail(userRequest.getEmail());
 		BCryptPasswordEncoder passwordEncoder=new BCryptPasswordEncoder();
 		 String brepctpassword=passwordEncoder.encode(userRequest.getPassword());
 		if (!li.isEmpty()) {
@@ -39,24 +40,24 @@ public class userService {
 		}
 	}
 
-	public User userlogin(String email, String password) {
-		BCryptPasswordEncoder passwordEncoder=new BCryptPasswordEncoder();
-		List<User> li=repo.findByEmail(email);
-		
-		if (repo.findByEmail(email).size() > 0) {
-			User dbuser=li.get(0);
-			if (passwordEncoder.matches(password, dbuser.getPassword())) {
-				System.out.println("password mathch");
-				return  dbuser;
-			}
-			else {
-				System.out.println("password not match");
-				return null;
-			}
-		}
-		return null;
-
-	}
+//	public User userlogin(String email, String password) {
+//		BCryptPasswordEncoder passwordEncoder=new BCryptPasswordEncoder();
+//          List<User> li=repo.findByEmail(email);
+//		
+//		if (repo.findByEmail(email).size() > 0) {
+//			User dbuser=li.get(0);
+//			if (passwordEncoder.matches(password, dbuser.getPassword())) {
+//				System.out.println("password mathch");
+//				return  dbuser;
+//			}
+//			else {
+//				System.out.println("password not match");
+//				return null;
+//			}
+//		}
+//		return null;
+//
+//	}
 
 	public List<Product> getallproduct() {
 		return productrepo.findAll();
