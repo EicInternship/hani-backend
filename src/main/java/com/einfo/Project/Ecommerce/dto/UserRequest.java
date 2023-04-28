@@ -1,5 +1,7 @@
 package com.einfo.Project.Ecommerce.dto;
 
+import java.time.LocalDate;
+
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
@@ -21,4 +23,9 @@ public class UserRequest {
 	 @Email(message ="invalid email addresss")
 	 private String email;
 	 private String password;
+	 @NotNull(message ="country should not be null")
+	 private String country;
+	 private LocalDate signupDate =LocalDate.now();
+	 private String role="Customer";
+	 
 }
