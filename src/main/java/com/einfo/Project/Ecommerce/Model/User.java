@@ -25,7 +25,8 @@ public class User {
  private String password;
  private String country;
  private LocalDate signupDate =LocalDate.now();
- private String role="Customer";
+// private String role="Customer";
+ private String role;
  
  
 }

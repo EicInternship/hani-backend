@@ -23,5 +23,13 @@ public class Product {
    private long price;
    private String pimagename;
    private String category;
+@Override
+public String toString() {
+	return "{'id':'" + id + "', 'pname':'" + pname + "', 'description':'" + description + "', 'price':'" + price
+			+ "', 'pimagename':'" + pimagename + "', 'category':'" + category + "'}";
+}
+   
+   
+   
    
 }

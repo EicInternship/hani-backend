@@ -1,14 +1,20 @@
 package com.einfo.Project.Ecommerce.Controller;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import com.razorpay.*;
 import org.springframework.security.core.Authentication;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -21,16 +27,18 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
-
 import org.springframework.http.MediaType;
+import org.springframework.http.RequestEntity;
+import org.springframework.http.HttpHeaders;
 //import org.togglz.core.Feature;
 //import org.togglz.core.manager.FeatureManager;
 //import org.togglz.core.util.NamedFeature;
-
 import com.einfo.Project.Ecommerce.Exception.UserAlaradyExiest;
+import com.einfo.Project.Ecommerce.Model.Addresss;
 import com.einfo.Project.Ecommerce.Model.Category;
 import com.einfo.Project.Ecommerce.Model.Product;
 import com.einfo.Project.Ecommerce.Model.User;
+import com.einfo.Project.Ecommerce.dto.Addressdto;
 import com.einfo.Project.Ecommerce.dto.AuthRequest;
 import com.einfo.Project.Ecommerce.dto.Categorydto;
 import com.einfo.Project.Ecommerce.dto.UserRequest;
@@ -67,6 +75,9 @@ public class ProjectController {
 
 	@Autowired
 	Categoryservice cService;
+	
+
+	
 	@Autowired
 	private JwtService jwtservice;
 	
@@ -93,13 +104,28 @@ public class ProjectController {
 		return new ResponseEntity<>(uservice.saveuser(userRequest), HttpStatus.CREATED);
 	}
 
+//	@PostMapping("/authenticate")
+//	public String authenticateAndGetToken(@RequestBody AuthRequest authRequest) {
+//		Authentication authentication = authenticationManager.authenticate(
+//				new UsernamePasswordAuthenticationToken(authRequest.getEmail(), authRequest.getPassword()));
+//		if (authentication.isAuthenticated()) {
+//			log.info("token genrated");
+//			return jwtservice.generateToken(authRequest.getEmail());
+//		} else {
+//			log.info("user is invalied");
+//			throw new UsernameNotFoundException("invalid user request !");
+//		}
+//
+//	}
 	@PostMapping("/authenticate")
-	public String authenticateAndGetToken(@RequestBody AuthRequest authRequest) {
+	public ResponseEntity<String> authenticateAndGetToken(@RequestBody AuthRequest authRequest) {
 		Authentication authentication = authenticationManager.authenticate(
 				new UsernamePasswordAuthenticationToken(authRequest.getEmail(), authRequest.getPassword()));
 		if (authentication.isAuthenticated()) {
 			log.info("token genrated");
-			return jwtservice.generateToken(authRequest.getEmail());
+			   String token = jwtservice.generateToken(authRequest.getEmail());
+	            return ResponseEntity.ok(token);
+//	     return  ResponseEntity<String>(jwtservice.generateToken(authRequest.getEmail()), HttpStatus.OK); 
 		} else {
 			log.info("user is invalied");
 			throw new UsernameNotFoundException("invalid user request !");
@@ -124,6 +150,7 @@ public class ProjectController {
 //   }
 
 	@PostMapping("image/add")
+//	   @PreAuthorize("hasAuthority('ADMIN')")
 	public ResponseEntity<String> productImageupload(@RequestParam("file") MultipartFile file,
 			@RequestParam("pname") String productName, @RequestParam("description") String Description,
 			@RequestParam("price") int productPrice, @RequestParam("category") String category) throws IOException {
@@ -144,18 +171,36 @@ public class ProjectController {
 		return ResponseEntity.status(HttpStatus.OK).contentType(MediaType.valueOf("image/png")).body(imageData);
 
 	}
-
 	@GetMapping("/product")
-	public List<Product> getproduct() {
+	 public List<Product>getAllProduct(){
+		 
+		return  productrepo.findAll();
+		 
+	 }
+
+	@GetMapping("/productbypage")
+	public ResponseEntity<?>  getproduct(@RequestParam(value="pagenumber",defaultValue="0",required=false) int pagenumber,
+			@RequestParam(value="pagesize",defaultValue="6",required=false)int pagesize)
+	{
 		log.info("list of product lodded");
 //	System.out.println(DISCOUNT_APPLIED);
 //	 if (manager.isActive(DISCOUNT_APPLIED)) {
 //            return applyDiscount(uservice.getallproduct());
 //        } else {
-		return uservice.getallproduct();
+		Pageable p=PageRequest.of(pagenumber, pagesize);
+		Page<Product>pageproduct=productrepo.findAll(p);
+	   List<Product>allproduct=pageproduct.getContent();
+		 HttpHeaders responseHeaders = new HttpHeaders();
+		    responseHeaders.set("X-Total-Pages", String.valueOf(pageproduct.getTotalPages()));
+            System.out.println(responseHeaders); 
+		 return ResponseEntity.ok()
+			        .headers(responseHeaders)
+			        .body(allproduct + String.valueOf(pageproduct.getTotalPages()));
 	}
 
+	
 	@PostMapping("/addcategory")
+//     @PreAuthorize("hasAuthority('ADMIN')")
 	public ResponseEntity<Category> categorysave(@RequestBody @Valid Categorydto categorydto) {
 		log.info("category is add ");
 		return new ResponseEntity<>(cService.savecategory(categorydto), HttpStatus.CREATED);
@@ -196,4 +241,57 @@ public class ProjectController {
 	        return ResponseEntity.status(HttpStatus.OK).body("You are not a seller");
 	    }
        }
+	
+	@GetMapping("/viewuser")
+    public List<User> getAllUsers() {
+    	log.info("Customer List printed in frontend");
+        return uservice.getAllUsers();
+    }
+	 @PostMapping("/updateuser")
+	    public void updateUser(@RequestBody User user) {
+	      log.info("Updating user with id: ");
+	    	System.out.println(user);
+	    	repo.save(user);
+	    }
+	 @GetMapping("/deleteuser")
+	    public void deleteUser(@RequestParam int id) {
+	        log.info("Delete Customer with email " + id);
+//	        userServiceImpl.deleteUser(id);
+	        repo.deleteById(id);
+	        
+	    }
+	 @GetMapping("/customerdetail")
+	    public ResponseEntity<User> getUserDetailsById(@RequestParam int id) {
+	    	log.info("Detail Of Customer with ID"+id);
+	        User user = repo.findById(id)
+	            .orElseThrow();
+	        return ResponseEntity.ok(user);
+	    }
+	 @GetMapping("/totaluser")
+	    public ResponseEntity<Long> countEmail() {
+	    	log.info("Counting total number of Customers");
+	        return uservice.countEmail();
+	    }
+
+	 
+	  @PostMapping("/addaddress")
+	  public ResponseEntity<Addresss>addresssave(@RequestBody @Valid Addressdto addressdto){
+		  log.info("Address is add");
+		  return new ResponseEntity<>(uservice.saveaddress(addressdto), HttpStatus.CREATED);
+	  }
+	  
+	  @PostMapping("/createorder")
+		 public String  pymnetorder(@RequestBody Map<String,Object>  data) throws RazorpayException {
+	    	   System.out.println(data);
+	    	   int amt=Integer.parseInt(data.get("amount").toString());
+	    	   var Client=new RazorpayClient("rzp_test_AI8eqhaiXHtxi2","fDK4YcdULY96q5wJJ6FrqBQ8");
+	    	   JSONObject orderRequest = new JSONObject();
+	    	   orderRequest.put("amount", amt*100); // amount in the smallest currency unit
+	    	   orderRequest.put("currency", "INR");
+	    	   orderRequest.put("receipt", "order_rcptid_11");
+	    	  Order order  =Client.orders.create(orderRequest);
+//	    	   Client.orders.create(orderRequest)
+	    	   System.out.println(order);
+			  return order.toString();
+		 } 
 }

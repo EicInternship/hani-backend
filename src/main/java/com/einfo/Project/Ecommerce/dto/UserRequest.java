@@ -26,6 +26,6 @@ public class UserRequest {
 	 @NotNull(message ="country should not be null")
 	 private String country;
 	 private LocalDate signupDate =LocalDate.now();
-	 private String role="Customer";
+	 private String role;
 	 
 }

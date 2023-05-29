@@ -13,6 +13,8 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.authority.mapping.GrantedAuthoritiesMapper;
+import org.springframework.security.core.authority.mapping.SimpleAuthorityMapper;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -45,7 +47,8 @@ public class SpringSecurityConfig   {
 	 public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 	        return http.cors().and().csrf().disable()
 	                .authorizeHttpRequests()
-	                .requestMatchers("/signup","/authenticate","image/**","/checkseller").permitAll()
+	                .requestMatchers("/signup","/authenticate","image/**","/checkseller,/deleteuser","/createorder").permitAll()
+//	                .requestMatchers("/addcategory","image/add").hasRole("ADMIN")
 	                .and()
 	                .authorizeHttpRequests().anyRequest()
 	                .authenticated()
@@ -65,9 +68,18 @@ public class SpringSecurityConfig   {
 	        DaoAuthenticationProvider authenticationProvider=new DaoAuthenticationProvider();
 	        authenticationProvider.setUserDetailsService(userDetailsService());
 	        authenticationProvider.setPasswordEncoder(passwordEncoder());
+	        authenticationProvider.setAuthoritiesMapper(authoritiesMapper());
 	        return authenticationProvider;
 	    }
 	    @Bean
+	    public GrantedAuthoritiesMapper authoritiesMapper() {
+	        SimpleAuthorityMapper authorityMapper = new SimpleAuthorityMapper();
+	        authorityMapper.setPrefix("ROLE_"); // Optional: Add a prefix to role names
+	        authorityMapper.setConvertToUpperCase(true); // Optional: Convert role names to uppercase
+	        return authorityMapper;
+	    }
+
+		@Bean
 	    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
 	        return config.getAuthenticationManager();
 	    }
