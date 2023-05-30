@@ -2,7 +2,7 @@ package com.einfo.Project.Ecommerce.dto;
 
 import java.time.LocalDate;
 
-import com.einfochips.ecommerce.entity.User;
+//import com.einfochips.ecommerce.entity.User;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

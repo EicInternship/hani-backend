@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Producdto {
+	private int id;
 	@NotNull(message ="product name should not be null")
 	private  String pname;
 	@NotNull(message ="description should not be null")
